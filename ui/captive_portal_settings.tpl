@@ -170,7 +170,18 @@
                 </div>
             </div>
         </div>
-        <div class="row">
+        <div>
+            <pre><b>USAGE:</b>
+                
+                    <br>Upload your sliders in Slider Setting
+                    <br>Go General Settings and setup as per your requirements
+                    <br>Then download your the login.html by clicking on download login page
+                    <br>Then upload the downloaded login.html file to your mikrotik router
+                    <br>Make sure you add your webiste URL in mikrotik hotspot wall garden
+                    <br>If your website is https i will suggest you to add certificate to your router
+                
+            </pre>
+        </div>
 </section>
 
 <script>
