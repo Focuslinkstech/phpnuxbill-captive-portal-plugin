@@ -89,7 +89,7 @@
                                                             <span aria-hidden="true">&times;</span></button>
                                                         <h4 class="modal-title" id="sliderEditLabel{$index}">{Lang::T('Edit Slider')}</h4>
                                                     </div>
-                                                    <div class="modal-body">
+                                                    <div class="box-body">
                                                         <!-- Edit Form -->
                                                         <form action="{$_url}plugin/captive_portal_slider_edit&slideIndex={$index}" method="post" enctype="multipart/form-data">
                                                             <input type="hidden" name="slideIndex" value="{$index}">
