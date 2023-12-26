@@ -153,7 +153,7 @@
                 <h4 class="modal-title">Add New Slider</h4>
             </div>
             <form method="post" action="{$_url}plugin/captive_portal_slider" enctype="multipart/form-data">
-                <div class="modal-body">
+                <div class="box-body">
                     <div class="form-group">
                         <label for="image">Image:</label>
                         <input type="file" name="image" id="image" required>
