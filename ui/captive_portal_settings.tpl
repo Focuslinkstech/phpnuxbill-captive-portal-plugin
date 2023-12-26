@@ -131,7 +131,20 @@
                                         <small class="form-text text-muted">Choose No If you want to disable Member Login</small>
                                     </div>
                                 </div>
+                               <br>
+                            <div>
+                                <pre><b>USAGE:</b>
+
+                                        <br>Upload your sliders in Slider Setting
+                                        <br>Go General Settings and setup as per your requirements
+                                        <br>Then download your the login.html by clicking on download login page
+                                        <br>Then upload the downloaded login.html file to your mikrotik router
+                                        <br>Make sure you add your webiste URL in mikrotik hotspot wall garden
+                                        <br>If your website is https i will suggest you to add certificate to your router
+
+                                </pre>
                             </div>
+                        </div>
                             <div class="box-footer">
                                 <a href="{$_url}plugin/captive_portal_overview" class="btn btn-default">Cancel</a>
                                 <button type="submit" class="btn btn-info pull-right">Save Changes</button>
@@ -169,18 +182,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div>
-            <pre><b>USAGE:</b>
-                
-                    <br>Upload your sliders in Slider Setting
-                    <br>Go General Settings and setup as per your requirements
-                    <br>Then download your the login.html by clicking on download login page
-                    <br>Then upload the downloaded login.html file to your mikrotik router
-                    <br>Make sure you add your webiste URL in mikrotik hotspot wall garden
-                    <br>If your website is https i will suggest you to add certificate to your router
-                
-            </pre>
         </div>
 </section>
 
