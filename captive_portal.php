@@ -63,14 +63,24 @@ function captive_portal_slider()
     // Check if image creation was successful
 
     // Open the uploaded image
-    $image = imagecreatefromjpeg($targetFile);
+    $image = null;
+    switch (strtolower($imageExtension)) {
+      case 'jpeg':
+      case 'jpg':
+        $image = imagecreatefromjpeg($targetFile);
+        break;
+      case 'png':
+        $image = imagecreatefrompng($targetFile);
+        break;
+      case 'gif':
+        $image = imagecreatefromgif($targetFile);
+        break;
+      default:
+        r2(U . "plugin/captive_portal_slider", 'e', Lang::T("Unsupported image format"));
+        break;
+    }
 
     if ($image !== false) {
-      // Get image dimensions
-      $imageWidth = imagesx($image);
-      $imageHeight = imagesy($image);
-
-
       // Get image dimensions
       $imageWidth = imagesx($image);
       $imageHeight = imagesy($image);
@@ -103,7 +113,18 @@ function captive_portal_slider()
       imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $imageWidth, $imageHeight);
 
       // Save the resized image
-      imagejpeg($resizedImage, $targetFile);
+      switch (strtolower($imageExtension)) {
+        case 'jpeg':
+        case 'jpg':
+          imagejpeg($resizedImage, $targetFile);
+          break;
+        case 'png':
+          imagepng($resizedImage, $targetFile);
+          break;
+        case 'gif':
+          imagegif($resizedImage, $targetFile);
+          break;
+      }
 
       // Generate thumbnail
       $thumbnailDirectory = 'system/plugin/captive_portal/sliders/thumbnails/';
@@ -119,7 +140,18 @@ function captive_portal_slider()
       imagecopyresampled($thumbnailImage, $resizedImage, 0, 0, 0, 0, $thumbnailWidth, $thumbnailHeight, $newWidth, $newHeight);
 
       // Save the thumbnail
-      imagejpeg($thumbnailImage, $thumbnailFile);
+      switch (strtolower($imageExtension)) {
+        case 'jpeg':
+        case 'jpg':
+          imagejpeg($thumbnailImage, $thumbnailFile);
+          break;
+        case 'png':
+          imagepng($thumbnailImage, $thumbnailFile);
+          break;
+        case 'gif':
+          imagegif($thumbnailImage, $thumbnailFile);
+          break;
+      }
 
       // Add the image and thumbnail paths to the new slide data
       $newSlide['image'] = $targetFile;
@@ -139,8 +171,6 @@ function captive_portal_slider()
     }
   }
 
-
-
   // Assign slider data to the template variable only if the data exists
   if (!empty($data)) {
     $ui->assign('slides', $data);
@@ -148,6 +178,7 @@ function captive_portal_slider()
 
   $ui->display('captive_portal_slider.tpl');
 }
+
 
 
 // Edit page for a specific slider
