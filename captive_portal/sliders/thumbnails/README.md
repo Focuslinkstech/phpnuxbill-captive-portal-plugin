@@ -1,0 +1,2 @@
+# phpnuxbill-captive-portal-plugin
+ 
