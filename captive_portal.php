@@ -5,391 +5,335 @@ register_menu("Captive Portal", true, "captive_portal_overview", 'AFTER_SETTINGS
 
 function captive_portal_overview()
 {
-    global $ui, $routes;
-    _admin();
-    $ui->assign('_title', 'Captive Portal Dashboard');
-    $ui->assign('_system_menu', '');
-    $admin = Admin::_info();
-    $ui->assign('_admin', $admin);
-    $action = $routes['1'];
+  global $ui, $routes;
+  _admin();
+  $ui->assign('_title', Lang::T('Captive Portal Dashboard'));
+  $ui->assign('_system_menu', '');
+  $admin = Admin::_info();
+  $ui->assign('_admin', $admin);
+  $action = $routes['1'];
 
-    if ($admin['user_type'] != 'Admin' and $admin['user_type'] != 'Sales') {
-    r2(U . "dashboard", 'e', $_L['Do_Not_Access']);
-    }
+  if ($admin['user_type'] != 'SuperAdmin' && $admin['user_type'] != 'Admin' && $admin['user_type'] != 'Sales') {
+    r2(U . "dashboard", 'e', Lang::T("You Do Not Have Access"));
+  }
 
 
-    $ui->display('captive_portal_overview.tpl');
+  $ui->display('captive_portal_overview.tpl');
 }
 
 
 function captive_portal_slider()
 {
-    global $ui, $routes;
-    _admin();
-    $ui->assign('_title', 'Captive Portal Sliders');
-    $ui->assign('_system_menu', '');
-    $admin = Admin::_info();
-    $ui->assign('_admin', $admin);
-    $action = $routes['1'];
+  global $ui, $routes;
+  _admin();
+  $ui->assign('_title', Lang::T('Captive Portal Sliders'));
+  $ui->assign('_system_menu', '');
+  $admin = Admin::_info();
+  $ui->assign('_admin', $admin);
+  $action = $routes['1'];
 
-    if ($admin['user_type'] != 'Admin' and $admin['user_type'] != 'Sales') {
-    r2(U . "dashboard", 'e', $_L['Do_Not_Access']);
-    }
+  if ($admin['user_type'] != 'SuperAdmin' && $admin['user_type'] != 'Admin' && $admin['user_type'] != 'Sales') {
+    r2(U . "dashboard", 'e', Lang::T("You Do Not Have Access"));
+  }
 
-    // Read JSON data from file
-    $jsonFile = 'system/plugin/captive_portal/slider.json';
-    $jsonData = file_get_contents($jsonFile);
-    $data = json_decode($jsonData, true);
+  // Read JSON data from file
+  $jsonFile = 'system/plugin/captive_portal/slider.json';
+  $jsonData = file_get_contents($jsonFile);
+  $data = json_decode($jsonData, true);
 
-    // Check if the form is submitted
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Retrieve form data and process it
-        $newSlide = [
-            "title" => $_POST['title'],
-            "description" => $_POST['description'],
-            "link" => $_POST['link'],
-            "button" => $_POST['button']
-        ];
+  // Check if the form is submitted
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Retrieve form data and process it
+    $newSlide = [
+      "title" => $_POST['title'],
+      "description" => $_POST['description'],
+      "link" => $_POST['link'],
+      "button" => $_POST['button']
+    ];
 
-        // Upload image
-        $targetDirectory = 'system/plugin/captive_portal/sliders/';
-        $timestamp = time();
-        $imageExtension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-        $imageFilename = $timestamp . '.' . $imageExtension;
-        $targetFile = $targetDirectory . $imageFilename;
-        // Move uploaded image to target directory
-        move_uploaded_file($_FILES['image']['tmp_name'], $targetFile);
+    // Upload image
+    $targetDirectory = 'system/plugin/captive_portal/sliders/';
+    $timestamp = time();
+    $imageExtension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+    $imageFilename = $timestamp . '.' . $imageExtension;
+    $targetFile = $targetDirectory . $imageFilename;
+    // Move uploaded image to target directory
+    move_uploaded_file($_FILES['image']['tmp_name'], $targetFile);
 
-        // Open the uploaded image
-        $image = imagecreatefromjpeg($targetFile);
+    // Check if image creation was successful
 
-        // Get image dimensions
-        $imageWidth = imagesx($image);
-        $imageHeight = imagesy($image);
+    // Open the uploaded image
+    $image = imagecreatefromjpeg($targetFile);
 
-        // Calculate the aspect ratio
-        $aspectRatio = $imageWidth / $imageHeight;
+    if ($image !== false) {
+      // Get image dimensions
+      $imageWidth = imagesx($image);
+      $imageHeight = imagesy($image);
 
-        // Define the maximum width and height of the resized image
-        $maxWidth = 2200; // Adjust the desired maximum width
-        $maxHeight = 900; // Adjust the desired maximum height
 
-        // Calculate the new dimensions while maintaining the aspect ratio
-        if ($imageWidth > $maxWidth || $imageHeight > $maxHeight) {
-            if ($maxWidth / $maxHeight > $aspectRatio) {
-                $newWidth = $maxHeight * $aspectRatio;
-                $newHeight = $maxHeight;
-            } else {
-                $newWidth = $maxWidth;
-                $newHeight = $maxWidth / $aspectRatio;
-            }
+      // Get image dimensions
+      $imageWidth = imagesx($image);
+      $imageHeight = imagesy($image);
+
+      // Calculate the aspect ratio
+      $aspectRatio = $imageWidth / $imageHeight;
+
+      // Define the maximum width and height of the resized image
+      $maxWidth = 2200; // Adjust the desired maximum width
+      $maxHeight = 900; // Adjust the desired maximum height
+
+      // Calculate the new dimensions while maintaining the aspect ratio
+      if ($imageWidth > $maxWidth || $imageHeight > $maxHeight) {
+        if ($maxWidth / $maxHeight > $aspectRatio) {
+          $newWidth = $maxHeight * $aspectRatio;
+          $newHeight = $maxHeight;
         } else {
-            $newWidth = $imageWidth;
-            $newHeight = $imageHeight;
+          $newWidth = $maxWidth;
+          $newHeight = $maxWidth / $aspectRatio;
         }
+      } else {
+        $newWidth = $imageWidth;
+        $newHeight = $imageHeight;
+      }
 
-        // Create a new image with the resized dimensions
-        $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
+      // Create a new image with the resized dimensions
+      $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
 
-        // Perform the resize
-        imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $imageWidth, $imageHeight);
+      // Perform the resize
+      imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $imageWidth, $imageHeight);
 
-        // Save the resized image
-        imagejpeg($resizedImage, $targetFile);
+      // Save the resized image
+      imagejpeg($resizedImage, $targetFile);
 
-        // Generate thumbnail
-        $thumbnailDirectory = 'system/plugin/captive_portal/sliders/thumbnails/';
-        $thumbnailWidth = 80; // Adjust the desired thumbnail width
-        $thumbnailHeight = 40; // Adjust the desired thumbnail height
-        $thumbnailFilename = $timestamp . '_thumbnail.' . $imageExtension;
-        $thumbnailFile = $thumbnailDirectory . $thumbnailFilename;
+      // Generate thumbnail
+      $thumbnailDirectory = 'system/plugin/captive_portal/sliders/thumbnails/';
+      $thumbnailWidth = 80; // Adjust the desired thumbnail width
+      $thumbnailHeight = 40; // Adjust the desired thumbnail height
+      $thumbnailFilename = $timestamp . '_thumbnail.' . $imageExtension;
+      $thumbnailFile = $thumbnailDirectory . $thumbnailFilename;
 
-        // Create a new image with the desired thumbnail size
-        $thumbnailImage = imagecreatetruecolor($thumbnailWidth, $thumbnailHeight);
+      // Create a new image with the desired thumbnail size
+      $thumbnailImage = imagecreatetruecolor($thumbnailWidth, $thumbnailHeight);
 
-        // Resize the resized image to the thumbnail size
-        imagecopyresampled($thumbnailImage, $resizedImage, 0, 0, 0, 0, $thumbnailWidth, $thumbnailHeight, $newWidth, $newHeight);
+      // Resize the resized image to the thumbnail size
+      imagecopyresampled($thumbnailImage, $resizedImage, 0, 0, 0, 0, $thumbnailWidth, $thumbnailHeight, $newWidth, $newHeight);
 
-        // Save the thumbnail
-        imagejpeg($thumbnailImage, $thumbnailFile);
+      // Save the thumbnail
+      imagejpeg($thumbnailImage, $thumbnailFile);
 
-        // Add the image and thumbnail paths to the new slide data
-        $newSlide['image'] = $targetFile;
-        $newSlide['thumbnail'] = $thumbnailFile;
+      // Add the image and thumbnail paths to the new slide data
+      $newSlide['image'] = $targetFile;
+      $newSlide['thumbnail'] = $thumbnailFile;
 
-        // Add the new slider to the data array
-        $data[] = $newSlide;
+      // Add the new slider to the data array
+      $data[] = $newSlide;
 
-        // Write JSON data back to file
-        $jsonData = json_encode($data, JSON_PRETTY_PRINT);
-        file_put_contents($jsonFile, $jsonData);
+      // Write JSON data back to file
+      $jsonData = json_encode($data, JSON_PRETTY_PRINT);
+      file_put_contents($jsonFile, $jsonData);
 
-        r2(U . "plugin/captive_portal_slider", 's', "Slider Added Successfully");
+      r2(U . "plugin/captive_portal_slider", 's', Lang::T("Slider Added Successfully"));
+    } else {
+      // Handle the case when image creation fails
+      r2(U . "plugin/captive_portal_slider", 'e', Lang::T("Failed to create the image"));
     }
+  }
 
-    // Assign slider data to the template variable only if the data exists
-    if (!empty($data)) {
-        $ui->assign('slides', $data);
-    }
 
-    $ui->display('captive_portal_slider.tpl');
+
+  // Assign slider data to the template variable only if the data exists
+  if (!empty($data)) {
+    $ui->assign('slides', $data);
+  }
+
+  $ui->display('captive_portal_slider.tpl');
 }
 
 
 // Edit page for a specific slider
 function captive_portal_slider_edit()
 {
-    global $ui, $routes;
-    _admin();
-    $admin = Admin::_info();
-    $ui->assign('_admin', $admin);
-    $action = $routes['1'];
+  global $ui, $routes;
+  _admin();
+  $admin = Admin::_info();
+  $ui->assign('_admin', $admin);
+  $action = $routes['1'];
 
-    if ($admin['user_type'] !== 'Admin' && $admin['user_type'] !== 'Sales') {
-        r2(U . "dashboard", 'e', $_L['Do_Not_Access']);
-    }
+  if ($admin['user_type'] != 'SuperAdmin' && $admin['user_type'] != 'Admin' && $admin['user_type'] != 'Sales') {
+    r2(U . "dashboard", 'e', Lang::T("You Do Not Have Access"));
+  }
+  // Read JSON data from file
+  $jsonFile = 'system/plugin/captive_portal/slider.json';
+  $jsonData = file_get_contents($jsonFile);
+  $data = json_decode($jsonData, true);
 
-    // Read JSON data from file
-    $jsonFile = 'system/plugin/captive_portal/slider.json';
-    $jsonData = file_get_contents($jsonFile);
-    $data = json_decode($jsonData, true);
+  // Retrieve the slider index or identifier from the request
+  $slideIndex = $_GET['slideIndex']; // Modify this based on your URL structure
 
-    // Retrieve the slider index or identifier from the request
-    $slideIndex = $_GET['slideIndex']; // Modify this based on your URL structure
+  // Check if the slider index is valid
+  if (!isset($data[$slideIndex])) {
+    r2(U . "plugin/captive_portal_slider", 'e', Lang::T("Invalid Slide Index"));
+  }
 
-    // Check if the slider index is valid
-    if (!isset($data[$slideIndex])) {
-        r2(U . "plugin/captive_portal_slider", 'e', "Invalid Slide Index");
-    }
+  // Retrieve the existing slider details
+  $existingSlide = $data[$slideIndex];
 
-    // Retrieve the existing slider details
-    $existingSlide = $data[$slideIndex];
+  // Check if the form is submitted
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Retrieve form data and process it
+    $editedSlide = [
+      "title" => $_POST['title'],
+      "description" => $_POST['description'],
+      "link" => $_POST['link'],
+      "button" => $_POST['button'],
+      "image" => $existingSlide['image'], // Preserve the existing image path
+      "thumbnail" => $existingSlide['thumbnail'] // Preserve the existing thumbnail path
+    ];
 
-    // Check if the form is submitted
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Retrieve form data and process it
-        $editedSlide = [
-            "title" => $_POST['title'],
-            "description" => $_POST['description'],
-            "link" => $_POST['link'],
-            "button" => $_POST['button'],
-            "image" => $existingSlide['image'], // Preserve the existing image path
-            "thumbnail" => $existingSlide['thumbnail'] // Preserve the existing thumbnail path
-        ];
+    // Update the specific slider with the edited data
+    $data[$slideIndex] = $editedSlide;
 
-        // Update the specific slider with the edited data
-        $data[$slideIndex] = $editedSlide;
+    // Write JSON data back to file
+    $jsonData = json_encode($data, JSON_PRETTY_PRINT);
+    file_put_contents($jsonFile, $jsonData);
 
-        // Write JSON data back to file
-        $jsonData = json_encode($data, JSON_PRETTY_PRINT);
-        file_put_contents($jsonFile, $jsonData);
+    r2(U . "plugin/captive_portal_slider", 's', Lang::T("Slider Updated Successfully"));
+  }
 
-        r2(U . "plugin/captive_portal_slider", 's', "Slider Updated Successfully");
-    }
+  // Assign the existing slider details to the template variable
+  $ui->assign('slide', $existingSlide);
+  $ui->assign('slideIndex', $slideIndex);
 
-    // Assign the existing slider details to the template variable
-    $ui->assign('slide', $existingSlide);
-    $ui->assign('slideIndex', $slideIndex);
-
-    $ui->display('captive_portal_slider.tpl');
+  $ui->display('captive_portal_slider.tpl');
 }
 
 
 // Delete a specific slider
 function captive_portal_slider_delete()
 {
-    global $ui, $routes;
-    _admin();
-    $admin = Admin::_info();
-    $ui->assign('_admin', $admin);
-    $action = $routes['1'];
+  global $ui, $routes;
+  _admin();
+  $admin = Admin::_info();
+  $ui->assign('_admin', $admin);
+  $action = $routes['1'];
 
-    if ($admin['user_type'] != 'Admin' && $admin['user_type'] != 'Sales') {
-        r2(U . "dashboard", 'e', $_L['Do_Not_Access']);
-    }
+  if ($admin['user_type'] != 'SuperAdmin' && $admin['user_type'] != 'Admin' && $admin['user_type'] != 'Sales') {
+    r2(U . "dashboard", 'e', Lang::T("You Do Not Have Access"));
+  }
 
-    // Read JSON data from file
-    $jsonFile = 'system/plugin/captive_portal/slider.json';
-    $jsonData = file_get_contents($jsonFile);
-    $data = json_decode($jsonData, true);
+  // Read JSON data from file
+  $jsonFile = 'system/plugin/captive_portal/slider.json';
+  $jsonData = file_get_contents($jsonFile);
+  $data = json_decode($jsonData, true);
 
-    // Retrieve the slider index or identifier from the request
-    $slideIndex = $_GET['slideIndex']; // Modify this based on your URL structure
+  // Retrieve the slider index or identifier from the request
+  $slideIndex = $_GET['slideIndex']; // Modify this based on your URL structure
 
-    // Check if the slide index is valid
-    if (!isset($data[$slideIndex])) {
-        r2(U . "plugin/captive_portal_slider", 'e', "Invalid Slider Index");
-    }
+  // Check if the slide index is valid
+  if (!isset($data[$slideIndex])) {
+    r2(U . "plugin/captive_portal_slider", 'e', Lang::T("Invalid Slider Index"));
+  }
 
-    // Retrieve the slider to be deleted
-    $slideToDelete = $data[$slideIndex];
+  // Retrieve the slider to be deleted
+  $slideToDelete = $data[$slideIndex];
 
-    // Remove the slider from the array
-    unset($data[$slideIndex]);
+  // Remove the slider from the array
+  unset($data[$slideIndex]);
 
-    // Delete the associated image files
-    $imagePath = $slideToDelete['image'];
-    $thumbnailPath = $slideToDelete['thumbnail'];
+  // Delete the associated image files
+  $imagePath = $slideToDelete['image'];
+  $thumbnailPath = $slideToDelete['thumbnail'];
 
-    // Delete the image file
-    if (file_exists($imagePath)) {
-        unlink($imagePath);
-    }
+  // Delete the image file
+  if (file_exists($imagePath)) {
+    unlink($imagePath);
+  }
 
-    // Delete the thumbnail file
-    if (file_exists($thumbnailPath)) {
-        unlink($thumbnailPath);
-    }
+  // Delete the thumbnail file
+  if (file_exists($thumbnailPath)) {
+    unlink($thumbnailPath);
+  }
 
-    // Write JSON data back to file
-    $jsonData = json_encode($data, JSON_PRETTY_PRINT);
-    file_put_contents($jsonFile, $jsonData);
+  // Write JSON data back to file
+  $jsonData = json_encode($data, JSON_PRETTY_PRINT);
+  file_put_contents($jsonFile, $jsonData);
 
-    r2(U . "plugin/captive_portal_slider", 's', "Slider Deleted Successfully");
+  r2(U . "plugin/captive_portal_slider", 's', Lang::T("Slider Deleted Successfully"));
 }
 
 function captive_portal_login()
 {
-    global $ui;
+  global $ui;
 
-    /* Iterate through $_POST array and echo key-value pairs
+  /* Iterate through $_POST array and echo key-value pairs
     //foreach ($_POST as $key => $value) {
       //  echo $key . ': ' . $value . '<br>';
     }*/
-    $mac = $_POST['mac'];
-    $ip = $_POST['ip'];
-    $username = $_POST['username'];
-    $linklogin = $_POST['link-login'];
-    $linkorig = $_POST['link-orig'];
-    $error = $_POST['error'];
-    $trial = $_POST['trial'];
-    $blocked = $_POST['blocked'];
-    $loginby = $_POST['login-by'];
-    $chapid = $_POST['chap-id'];
-    $chapchallenge = $_POST['chap-challenge'];
-    $linkloginonly = $_POST['link-login-only'];
-    $linkorigesc = $_POST['link-orig-esc'];
-    $macesc = $_POST['mac-esc'];
-    $identity = $_POST['identity'];
-    $bytesinnice = $_POST['bytes-in-nice'];
-    $bytesoutnice = $_POST['bytes-out-nice'];
-    $sessiontimeleft = $_POST['session-time-left'];
-    $uptime = $_POST['uptime'];
-    $refreshtimeout = $_POST['refresh-timeout'];
-    $refreshtimeoutsecs = $_POST['refresh-timeout-secs'];
-    $linkstatus = $_POST['link-status'];
-    $linkadvert = $_POST['link-advert'];
+  $mac = $_POST['mac'];
+  $ip = $_POST['ip'];
+  $username = $_POST['username'];
+  $linklogin = $_POST['link-login'];
+  $linkorig = $_POST['link-orig'];
+  $error = $_POST['error'];
+  $trial = $_POST['trial'];
+  $blocked = $_POST['blocked'];
+  $loginby = $_POST['login-by'];
+  $chapid = $_POST['chap-id'];
+  $chapchallenge = $_POST['chap-challenge'];
+  $linkloginonly = $_POST['link-login-only'];
+  $linkorigesc = $_POST['link-orig-esc'];
+  $macesc = $_POST['mac-esc'];
+  $identity = $_POST['identity'];
+  $bytesinnice = $_POST['bytes-in-nice'];
+  $bytesoutnice = $_POST['bytes-out-nice'];
+  $sessiontimeleft = $_POST['session-time-left'];
+  $uptime = $_POST['uptime'];
+  $refreshtimeout = $_POST['refresh-timeout'];
+  $refreshtimeoutsecs = $_POST['refresh-timeout-secs'];
+  $linkstatus = $_POST['link-status'];
+  $linkadvert = $_POST['link-advert'];
 
-    // Read the JSON file
-    $jsonFile = 'system/plugin/captive_portal/slider.json';
-    $jsonData = file_get_contents($jsonFile);
-    // Parse the JSON data
-    $slides = json_decode($jsonData, true);
+  // Read the JSON file
+  $jsonFile = 'system/plugin/captive_portal/slider.json';
+  $jsonData = file_get_contents($jsonFile);
+  // Parse the JSON data
+  $slides = json_decode($jsonData, true);
 
-    $configFile = 'system/plugin/captive_portal/config.json';
-    $configData = file_get_contents($configFile);
-    $config = json_decode($configData, true);
+  $configFile = 'system/plugin/captive_portal/config.json';
+  $configData = file_get_contents($configFile);
+  $config = json_decode($configData, true);
 
-    // Assign the data to Smarty variables
-    $ui->assign('slides', $slides);
-    $ui->assign('mac', $mac);
-    $ui->assign('ip', $ip);
-    $ui->assign('username', $username);
-    $ui->assign('linklogin', $linklogin);
-    $ui->assign('linkorig', $linkorig);
-    $ui->assign('error', $error);
-    $ui->assign('trial', $trial);
-    $ui->assign('blocked', $blocked);
-    $ui->assign('chapid', $chapid);
-    $ui->assign('loginby', $loginby);
-    $ui->assign('chapchallenge', $chapchallenge);
-    $ui->assign('linkloginonly', $linkloginonly);
-    $ui->assign('linkorigesc', $linkorigesc);
-    $ui->assign('macesc', $macesc);
-    $ui->assign('identity', $identity);
-    $ui->assign('bytesinnice', $bytesinnice);
-    $ui->assign('bytesoutnice', $bytesoutnice);
-    $ui->assign('sessiontimeleft', $sessiontimeleft);
-    $ui->assign('uptime', $uptime);
-    $ui->assign('refreshtimeout', $refreshtimeout);
-    $ui->assign('refreshtimeoutsecs', $refreshtimeoutsecs);
-    $ui->assign('linkstatus', $linkstatus);
-    $ui->assign('linkadvert', $linkadvert);
-    $ui->assign('config', $config);
+  // Assign the data to Smarty variables
+  $ui->assign('slides', $slides);
+  $ui->assign('mac', $mac);
+  $ui->assign('ip', $ip);
+  $ui->assign('username', $username);
+  $ui->assign('linklogin', $linklogin);
+  $ui->assign('linkorig', $linkorig);
+  $ui->assign('error', $error);
+  $ui->assign('trial', $trial);
+  $ui->assign('blocked', $blocked);
+  $ui->assign('chapid', $chapid);
+  $ui->assign('loginby', $loginby);
+  $ui->assign('chapchallenge', $chapchallenge);
+  $ui->assign('linkloginonly', $linkloginonly);
+  $ui->assign('linkorigesc', $linkorigesc);
+  $ui->assign('macesc', $macesc);
+  $ui->assign('identity', $identity);
+  $ui->assign('bytesinnice', $bytesinnice);
+  $ui->assign('bytesoutnice', $bytesoutnice);
+  $ui->assign('sessiontimeleft', $sessiontimeleft);
+  $ui->assign('uptime', $uptime);
+  $ui->assign('refreshtimeout', $refreshtimeout);
+  $ui->assign('refreshtimeoutsecs', $refreshtimeoutsecs);
+  $ui->assign('linkstatus', $linkstatus);
+  $ui->assign('linkadvert', $linkadvert);
+  $ui->assign('config', $config);
 
-    $ui->display('captive_portal_login.tpl');
+  $ui->display('captive_portal_login.tpl');
 }
 
 function captive_portal_settings()
-{
-    global $ui, $routes;
-    _admin();
-    $admin = Admin::_info();
-    $ui->assign('_title', 'Captive Portal General Settings');
-    $ui->assign('_admin', $admin);
-    $action = $routes['1'];
-
-    if ($admin['user_type'] != 'Admin' && $admin['user_type'] != 'Sales') {
-        r2(U . "dashboard", 'e', $_L['Do_Not_Access']);
-    }
-
-    // Load the existing settings from the JSON file
-    $configFile = 'system/plugin/captive_portal/config.json';
-    $defaultConfig = array(
-        'hotspot_title' => '',
-        'hotspot_name' => '',
-        'favicon' => '',
-        'logo' => ''
-    );
-    $settings = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : $defaultConfig;
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Retrieve the form values and update the settings
-        $hotspot_title = $_POST['title'];
-        $hotspot_name = $_POST['name'];
-        $hotspot_trial = $_POST['trial'];
-        $hotspot_member = $_POST['member'];
-
-        // Process the logo image
-        if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
-            $logo_tmp = $_FILES['logo']['tmp_name'];
-            $logo_name = $_FILES['logo']['name'];
-            $logo_ext = pathinfo($logo_name, PATHINFO_EXTENSION);
-            $logo_destination = 'system/plugin/captive_portal/img/logo.' . $logo_ext;
-            move_uploaded_file($logo_tmp, $logo_destination);
-            $settings['logo'] = $logo_destination;
-        }
-
-        // Process the favicon image
-        if (isset($_FILES['favicon']) && $_FILES['favicon']['error'] === UPLOAD_ERR_OK) {
-            $favicon_tmp = $_FILES['favicon']['tmp_name'];
-            $favicon_name = $_FILES['favicon']['name'];
-            $favicon_ext = pathinfo($favicon_name, PATHINFO_EXTENSION);
-            $favicon_destination = 'system/plugin/captive_portal/img/favicon.' . $favicon_ext;
-            move_uploaded_file($favicon_tmp, $favicon_destination);
-            $settings['favicon'] = $favicon_destination;
-        }
-
-        // Update the title and name in the settings array
-        $settings['hotspot_title'] = $hotspot_title;
-        $settings['hotspot_name'] = $hotspot_name;
-        $settings['hotspot_trial'] = $hotspot_trial;
-        $settings['hotspot_member'] = $hotspot_member;
-
-        // Save the updated settings to the JSON file
-        file_put_contents($configFile, json_encode($settings));
-
-        // Redirect or display a success message
-      r2(U . "plugin/captive_portal_settings", 's', "Settings Saved");
-    }
-
-    // Pass the settings to the template
-    $ui->assign('settings', $settings);
-
-    $ui->display('captive_portal_settings.tpl');
-}
-
-function captive_portal_download_login()
 {
   global $ui, $routes;
   _admin();
@@ -398,8 +342,77 @@ function captive_portal_download_login()
   $ui->assign('_admin', $admin);
   $action = $routes['1'];
 
-  if ($admin['user_type'] != 'Admin' && $admin['user_type'] != 'Sales') {
-      r2(U . "dashboard", 'e', $_L['Do_Not_Access']);
+  if ($admin['user_type'] != 'SuperAdmin' && $admin['user_type'] != 'Admin' && $admin['user_type'] != 'Sales') {
+    r2(U . "dashboard", 'e', Lang::T("You Do Not Have Access"));
+  }
+
+  // Load the existing settings from the JSON file
+  $configFile = 'system/plugin/captive_portal/config.json';
+  $defaultConfig = array(
+    'hotspot_title' => '',
+    'hotspot_name' => '',
+    'favicon' => '',
+    'logo' => ''
+  );
+  $settings = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : $defaultConfig;
+
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Retrieve the form values and update the settings
+    $hotspot_title = $_POST['title'];
+    $hotspot_name = $_POST['name'];
+    $hotspot_trial = $_POST['trial'];
+    $hotspot_member = $_POST['member'];
+
+    // Process the logo image
+    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+      $logo_tmp = $_FILES['logo']['tmp_name'];
+      $logo_name = $_FILES['logo']['name'];
+      $logo_ext = pathinfo($logo_name, PATHINFO_EXTENSION);
+      $logo_destination = 'system/plugin/captive_portal/img/logo.' . $logo_ext;
+      move_uploaded_file($logo_tmp, $logo_destination);
+      $settings['logo'] = $logo_destination;
+    }
+
+    // Process the favicon image
+    if (isset($_FILES['favicon']) && $_FILES['favicon']['error'] === UPLOAD_ERR_OK) {
+      $favicon_tmp = $_FILES['favicon']['tmp_name'];
+      $favicon_name = $_FILES['favicon']['name'];
+      $favicon_ext = pathinfo($favicon_name, PATHINFO_EXTENSION);
+      $favicon_destination = 'system/plugin/captive_portal/img/favicon.' . $favicon_ext;
+      move_uploaded_file($favicon_tmp, $favicon_destination);
+      $settings['favicon'] = $favicon_destination;
+    }
+
+    // Update the title and name in the settings array
+    $settings['hotspot_title'] = $hotspot_title;
+    $settings['hotspot_name'] = $hotspot_name;
+    $settings['hotspot_trial'] = $hotspot_trial;
+    $settings['hotspot_member'] = $hotspot_member;
+
+    // Save the updated settings to the JSON file
+    file_put_contents($configFile, json_encode($settings));
+
+    // Redirect or display a success message
+    r2(U . "plugin/captive_portal_settings", 's', Lang::T("Settings Saved"));
+  }
+
+  // Pass the settings to the template
+  $ui->assign('settings', $settings);
+
+  $ui->display('captive_portal_settings.tpl');
+}
+
+function captive_portal_download_login()
+{
+  global $ui, $routes;
+  _admin();
+  $admin = Admin::_info();
+  $ui->assign('_title', Lang::T('Captive Portal General Settings'));
+  $ui->assign('_admin', $admin);
+  $action = $routes['1'];
+
+  if ($admin['user_type'] != 'SuperAdmin' && $admin['user_type'] != 'Admin' && $admin['user_type'] != 'Sales') {
+    r2(U . "dashboard", 'e', Lang::T("You Do Not Have Access"));
   }
   $configFile = 'system/plugin/captive_portal/config.json';
   $configData = file_get_contents($configFile);
